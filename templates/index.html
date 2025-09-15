@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Algo Vault Benchmark</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+    <h1>Algo Vault Benchmark</h1>
+
+    <div id="controls">
+        <label>Algorithms (comma separated, e.g., BubbleSort,QuickSort,MergeSort):</label>
+        <input type="text" id="algorithms" value="BubbleSort,QuickSort,MergeSort">
+
+        <label>Array Size:</label>
+        <input type="number" id="arraySize" value="1000">
+
+        <label>Number of Runs:</label>
+        <input type="number" id="numRuns" value="5">
+
+        <button id="runBtn">Run Benchmark</button>
+    </div>
+
+    <div id="results" style="display:none;">
+        <h2>Results</h2>
+        <table id="resultsTable" border="1">
+            <thead>
+                <tr>
+                    <th>Algorithm</th>
+                    <th>Average Time (ms)</th>
+                    <th>Correct</th>
+                </tr>
+            </thead>
+            <tbody></tbody>
+        </table>
+
+        <canvas id="lineChart" width="600" height="300"></canvas>
+    </div>
+
+    <script>
+        document.getElementById("runBtn").onclick = async function() {
+            const algosInput = document.getElementById("algorithms").value.split(",").map(s => s.trim());
+            const arraySize = document.getElementById("arraySize").value;
+            const numRuns = document.getElementById("numRuns").value;
+
+            const response = await fetch("/run_benchmark", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    algorithms: algosInput,
+                    array_size: arraySize,
+                    num_runs: numRuns
+                })
+            });
+
+            const data = await response.json();
+
+            // Populate table
+            const tbody = document.querySelector("#resultsTable tbody");
+            tbody.innerHTML = "";
+
+            const labels = [];
+            const datasets = [];
+
+            let maxRuns = 0;
+            for (let alg in data) {
+                const row = document.createElement("tr");
+                if (data[alg].error) {
+                    row.innerHTML = `<td>${alg}</td><td colspan="2">Error: ${data[alg].error}</td>`;
+                    tbody.appendChild(row);
+                    continue;
+                }
+
+                row.innerHTML = `
+                    <td>${alg}</td>
+                    <td>${data[alg].average_time_ms.toFixed(3)}</td>
+                    <td>${data[alg].correct}</td>
+                `;
+                tbody.appendChild(row);
+
+                // Prepare line chart data
+                maxRuns = Math.max(maxRuns, data[alg].runs.length);
+                datasets.push({
+                    label: alg,
+                    data: data[alg].runs,
+                    borderColor: "#" + Math.floor(Math.random()*16777215).toString(16),
+                    fill: false
+                });
+            }
+
+            // Labels for runs
+            const runLabels = Array.from({length: maxRuns}, (_, i) => i + 1);
+
+            document.getElementById("results").style.display = "block";
+
+            // Draw line chart
+            const ctx = document.getElementById("lineChart").getContext("2d");
+            new Chart(ctx, {
+                type: "line",
+                data: {
+                    labels: runLabels,
+                    datasets: datasets
+                },
+                options: {
+                    responsive: true,
+                    plugins: {
+                        title: {
+                            display: true,
+                            text: 'Benchmark Runs per Algorithm'
+                        }
+                    }
+                }
+            });
+        }
+    </script>
+</body>
+</html>
