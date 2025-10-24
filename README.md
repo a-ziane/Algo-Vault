@@ -46,9 +46,13 @@ http://127.0.0.1:5000
 
 
 🧩 Future Enhancements
+
 Add visualization of sorting steps.
+
 Support for additional algorithms (Radix, Counting, etc.)
+
 Export benchmark results to CSV or PDF.
+
 User authentication for saving benchmark history.
 
 
