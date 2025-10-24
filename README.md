@@ -50,7 +50,13 @@ Add visualization of sorting steps.
 Support for additional algorithms (Radix, Counting, etc.)
 Export benchmark results to CSV or PDF.
 User authentication for saving benchmark history.
+
+
+
+
 🧑‍💻 Author
 Amani Ziane
+
 📧 amaniziane2006@gmail.com
+
 🌐 (https://github.com/a-ziane) | [www.linkedin.com/in/amani-ziane-81b667355]
