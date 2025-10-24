@@ -33,3 +33,28 @@ and visualizes their performance through interactive charts.
    ```bash
    git clone https://github.com/a-ziane/algo-vault.git
    cd algo-vault
+2. Create and activate a virtual environment:
+python -m venv venv
+source venv/bin/activate  # macOS/Linux
+venv\Scripts\activate     # Windows
+3. Install dependencies:
+pip install -r requirements.txt
+4. Run the Flask app:
+python app.py
+5. Open in your browser:
+http://127.0.0.1:5000
+📊 Example Output
+Algorithm	Time (ms)	Comparisons	Swaps
+Bubble Sort	154.2	4999	3842
+Quick Sort	2.8	118	54
+Merge Sort	3.5	130	—
+Visual results appear as bar and line charts for easy comparison.
+🧩 Future Enhancements
+Add visualization of sorting steps.
+Support for additional algorithms (Radix, Counting, etc.)
+Export benchmark results to CSV or PDF.
+User authentication for saving benchmark history.
+🧑‍💻 Author
+Amani Ziane
+📧 amaniziane2006@gmail.com
+🌐 (https://github.com/a-ziane) | [www.linkedin.com/in/amani-ziane-81b667355]
