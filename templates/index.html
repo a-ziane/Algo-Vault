@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Algo Vault Benchmark</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+<div class="container">
+    <h1>Algo Vault Benchmark</h1>
+
+    <div id="controls" class="controls">
+        <div class="form-group">
+            <label for="algorithms">Algorithms (comma separated):</label>
+            <input type="text" id="algorithms" value="BubbleSort,QuickSort,MergeSort">
+        </div>
+
+        <div class="form-group">
+            <label for="arraySize">Array Size:</label>
+            <input type="number" id="arraySize" value="1000">
+        </div>
+
+        <div class="form-group">
+            <label for="numRuns">Number of Runs:</label>
+            <input type="number" id="numRuns" value="5">
+        </div>
+
+        <button id="runBtn">Run Benchmark</button>
+    </div>
+
+    <div id="results" class="results">
+        <h2>Results</h2>
+        <table id="resultsTable">
+            <thead>
+                <tr>
+                    <th>Algorithm</th>
+                    <th>Average Time (ms)</th>
+                    <th>Correct</th>
+                </tr>
+            </thead>
+            <tbody></tbody>
+        </table>
+        <canvas id="lineChart"></canvas>
+    </div>
+</div>
+
+<script>
+document.getElementById("runBtn").onclick = async function() {
+    try {
+        const algos = document.getElementById("algorithms").value.split(",").map(s => s.trim());
+        const arraySize = document.getElementById("arraySize").value;
+        const numRuns = document.getElementById("numRuns").value;
+
+        const response = await fetch("/run_benchmark", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+                algorithms: algos,
+                array_size: arraySize,
+                num_runs: numRuns
+            })
+        });
+
+        if (!response.ok) throw new Error("Network response was not ok");
+        const data = await response.json();
+
+        const tbody = document.querySelector("#resultsTable tbody");
+        tbody.innerHTML = "";
+
+        const datasets = [];
+        const colors = ["#1a73e8", "#e91e63", "#ff9800", "#4caf50", "#9c27b0"];
+        let colorIndex = 0;
+        let maxRuns = 0;
+
+        for (let alg in data) {
+            const row = document.createElement("tr");
+
+            if (data[alg].error) {
+                row.innerHTML = `<td>${alg}</td><td colspan="2">Error: ${data[alg].error}</td>`;
+                tbody.appendChild(row);
+                continue;
+            }
+
+            const correctBadge = data[alg].correct 
+                ? '<span class="badge correct">✔</span>' 
+                : '<span class="badge incorrect">✖</span>';
+
+            row.innerHTML = `
+                <td>${alg}</td>
+                <td>${data[alg].average_time_ms.toFixed(3)}</td>
+                <td>${correctBadge}</td>
+            `;
+            tbody.appendChild(row);
+
+            maxRuns = Math.max(maxRuns, data[alg].runs.length);
+            datasets.push({
+                label: alg,
+                data: data[alg].runs,
+                borderColor: colors[colorIndex % colors.length],
+                fill: false,
+                tension: 0.2
+            });
+            colorIndex++;
+        }
+
+        const runLabels = Array.from({length: maxRuns}, (_, i) => i + 1);
+        document.getElementById("results").style.display = "block";
+
+        const ctx = document.getElementById("lineChart").getContext("2d");
+        new Chart(ctx, {
+            type: "line",
+            data: { labels: runLabels, datasets },
+            options: {
+                responsive: true,
+                plugins: {
+                    title: {
+                        display: true,
+                        text: 'Benchmark Runs per Algorithm',
+                        font: { size: 18 }
+                    },
+                    legend: { position: 'bottom' }
+                },
+                scales: {
+                    y: { title: { display: true, text: 'Time (ms)' } },
+                    x: { title: { display: true, text: 'Run #' } }
+                }
+            }
+        });
+
+    } catch (err) {
+        alert("Error fetching benchmark: " + err);
+        console.error(err);
+    }
+};
+</script>
+</body>
+</html>
